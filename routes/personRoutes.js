@@ -103,7 +103,7 @@ router.delete('/:id', async (req, res)=>{
       res.status(200).json({message: 'Person deleted successfully'});
     }
 
-
+  
   }
   catch(err){
     console.log(err);
