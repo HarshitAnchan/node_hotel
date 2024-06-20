@@ -1,5 +1,7 @@
 const { uniq } = require('lodash');
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+
 //define the person schema
 
 
@@ -31,10 +33,51 @@ const personSchema = new mongoose.Schema({
     salary :{
         type: Number,
         required:true
+    },
+    username:{
+        type: String
+    },
+    password:{
+        type: String
     }
 
     
 });
+
+personSchema.pre('save', async function(next){
+    const person = this;
+    //hash the password only if it has been modified (or is new)
+    if (!person.isModified('password'))
+        return next();
+    try{
+        // hash password geneartion
+        const salt = await bcrypt.genSalt(10);
+
+        // hash password
+        const hasedPassword = await bcrypt.hash(person.password, salt);
+        
+        //override the plain password with the hashed one
+        person.password = hasedPassword;
+
+    next();
+    }
+    catch(err){
+        return next(err);
+    }
+})
+
+
+personSchema.methods.comparePassword = async function(candidatePassword){
+    try{
+        //use bcrypt to compare the provided password with the hashed password
+        const isMatch = await bcrypt.compare(candidatePassword, this.password);
+        return isMatch;
+    }
+    catch(err){
+        throw err;
+
+    }
+}
 
 
 
